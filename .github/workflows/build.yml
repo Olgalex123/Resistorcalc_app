@@ -26,11 +26,14 @@ jobs:
           restore-keys: |
             buildozer-deps-
 
-      - name: Build APK
+      - name: Build APK (non-root)
         run: |
-          docker run --rm -v ${PWD}:/app -w /app \
+          docker run --rm \
+            --user 1000:1000 \
+            -v ${PWD}:/app \
+            -w /app \
             kivy/buildozer:latest \
-            sh -c "yes | buildozer android release"
+            buildozer android release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
