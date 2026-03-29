@@ -22,15 +22,29 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y openjdk-11-jdk zip unzip
+          sudo apt install -y autoconf automake libtool ninja-build
+
+      - name: Increase swap space (fix OOM)
+        run: |
+          sudo swapoff -a
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
 
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
           pip install cython buildozer "kivy==2.3.0" "kivymd==1.2.0"
-          pip install "https://github.com/kivy/python-for-android/archive/master.zip"
+          pip install --upgrade "https://github.com/kivy/python-for-android/archive/master.zip"
 
-      # ❌ УБРАНО: buildozer init (файл уже есть в репозитории!)
-      
+      - name: Fix libffi build (patch autoconf macros)
+        run: |
+          # Скопировать правильные макросы libtool
+          mkdir -p /usr/share/aclocal
+          wget -q https://raw.githubusercontent.com/libffi/libffi/master/libtool.m4 -O /usr/share/aclocal/libtool.m4 || true
+
       - name: Build APK
         run: buildozer -v android debug
 
