@@ -30,9 +30,7 @@ jobs:
         run: |
           docker run --rm -v ${PWD}:/app -w /app \
             kivy/buildozer:latest \
-            buildozer -y android release
-        env:
-          BUILDODOZER_ROOT_SKIP: "1"
+            sh -c "yes | buildozer android release"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
