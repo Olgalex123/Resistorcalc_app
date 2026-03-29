@@ -13,9 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.10  # ✅ Python 3.10 стабильнее для Buildozer
         uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
+        with: { python-version: '3.10' }
 
       - name: Install system dependencies
         run: |
@@ -31,45 +31,5 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Install Python dependencies (FIXED COMPATIBILITY)
-        run: |
-          pip install --upgrade pip
-          
-          # ✅ Cython 3.0.x (стабильная версия)
-          pip install "cython>=3.0.0,<3.1.0"
-          
-          # ✅ buildozer
-          pip install buildozer
-          
-          # ✅ Kivy и KivyMD
-          pip install "kivy==2.3.0"
-          pip install "kivymd==1.2.0"
-          
-          # ✅ pyjnius: используем конкретный коммит с исправлением для Python 3.11
-          # Коммит от января 2024: фикс "long" -> "int"
-          pip install "git+https://github.com/kivy/pyjnius.git@1c6f8f3e8d5e5c5b5e5f5e5f5e5f5e5f5e5f5e5f" || \
-          pip install "git+https://github.com/kivy/pyjnius.git@master"
-          
-          # ✅ python-for-android: master ветка
-          pip install "git+https://github.com/kivy/python-for-android.git@master"
-
-      - name: Pre-cythonize pyjnius (гарантируем генерацию .c файла)
-        run: |
-          # Предварительно сгенерировать C-файлы для pyjnius
-          python -c "
-          import sys, os
-          from Cython.Build import cythonize
-          import pyjnius
-          pkg_dir = os.path.dirname(pyjnius.__file__)
-          print(f'Cythonizing pyjnius in: {pkg_dir}')
-          cythonize(f'{pkg_dir}/jnius/*.pyx', compiler_directives={'language_level': 3})
-          " || echo "⚠️ Pre-cythonize skipped (may not be needed)"
-
-      - name: Build APK
-        run: |
-          cd $GITHUB_WORKSPACE
-          buildozer -v android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with: { name: resistorcalc-apk, path: bin/*.apk }
+      - name: Install Python dependencies
+        run
