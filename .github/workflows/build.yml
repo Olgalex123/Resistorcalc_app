@@ -3,7 +3,7 @@ name: Build APK
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:  # Позволяет запускать вручную
+  workflow_dispatch:
 
 jobs:
   build:
@@ -29,14 +29,8 @@ jobs:
           pip install cython buildozer "kivy==2.3.0" "kivymd==1.2.0"
           pip install "https://github.com/kivy/python-for-android/archive/master.zip"
 
-      - name: Initialize Buildozer
-        run: |
-          buildozer init
-          sed -i 's/title = My Application/title = Подбор Резисторов/' buildozer.spec
-          sed -i 's/package.name = myapp/package.name = resistorcalc/' buildozer.spec
-          sed -i 's/requirements = python3,kivy/requirements = python3,kivy==2.3.0,kivymd==1.2.0/' buildozer.spec
-          sed -i 's/orientation = all/orientation = portrait/' buildozer.spec
-
+      # ❌ УБРАНО: buildozer init (файл уже есть в репозитории!)
+      
       - name: Build APK
         run: buildozer -v android debug
 
