@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Подбор Резисторов</title>
+    <style>
+        *{box-sizing:border-box;font-family:system-ui,sans-serif;margin:0;padding:0}
+        body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:16px}
+        .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+        h1{color:#fff;text-align:center;margin-bottom:20px;font-size:22px;text-shadow:0 2px 4px rgba(0,0,0,.3)}
+        label{font-size:13px;color:#555;font-weight:500;display:block;margin:12px 0 6px}
+        input{width:100%;padding:14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;background:#fafafa;transition:border-color.2s}
+        input:focus{outline:none;border-color:#667eea;background:#fff}
+        .btn-row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+        .btn{flex:1;min-width:0;padding:10px 12px;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:#e8e8e8;color:#333;transition:all.2s}
+        .btn:active{transform:scale(.98)}
+        .btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 4px 12px rgba(102,126,234,.4)}
+        .calc-btn{width:100%;padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:600;margin:12px 0;cursor:pointer;box-shadow:0 6px 20px rgba(102,126,234,.4);transition:transform.2s}
+        .calc-btn:active{transform:scale(.98);box-shadow:0 4px 12px rgba(102,126,234,.3)}
+        .result{padding:14px 16px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center}
+        .result:last-child{border-bottom:none}
+        .values{font-weight:600;font-size:15px;color:#333;flex:1}
+        .total{font-size:13px;color:#2e7d32;text-align:right;white-space:nowrap}
+        .err-low{color:#2e7d32;font-weight:600}.err-mid{color:#f57c00;font-weight:600}.err-high{color:#d32f2f;font-weight:600}
+        .placeholder{text-align:center;color:#999;padding:20px;font-style:italic}
+        @media(max-width:400px){.btn{font-size:12px;padding:8px}}
+    </style>
+</head>
+<body>
+    <h1>⚡ Подбор Резисторов</h1>
+    <div class="card">
+        <label>Необходимое сопротивление:</label>
+        <input type="text" id="target" placeholder="1354 или 1.5k или 2.2M" inputmode="decimal">
+        
+        <label>Ряд сопротивлений:</label>
+        <div class="btn-row">
+            <button class="btn" id="e12" onclick="setSeries('E12')">Ряд E12</button>
+            <button class="btn active" id="e24" onclick="setSeries('E24')">Ряд E24</button>
+        </div>
+        
+        <label>Количество резисторов:</label>
+        <div class="btn-row">
+            <button class="btn active" id="btn2" onclick="setMode(2)">2 шт.</button>
+            <button class="btn" id="btn3" onclick="setMode(3)">3 шт.</button>
+        </div>
+        
+        <button class="calc-btn" onclick="calculate()">🔍 Рассчитать</button>
+    </div>
+    <div id="results" class="card"><div class="placeholder">Введите значение и нажмите «Рассчитать»</div></div>
+
+    <script>
+        const E12=[10,12,15,18,22,27,33,39,47,56,68,82],E24=[10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91];
+        let mode=2,series='E24';
+        function generateValues(base){let all=[];for(let exp=-1;exp<7;exp++){let mult=Math.pow(10,exp);base.forEach(b=>all.push(Math.round(b*mult*1e5)/1e5))}return[...new Set(all)].sort((a,b)=>a-b)}
+        function format(val){if(val>=1e6)return(val/1e6).toFixed(3)+'M';if(val>=1e3)return(val/1e3).toFixed(3)+'k';if(val>=1)return val.toFixed(3);return(val*1e3).toFixed(3)+'m'}
+        function find(target,count,base){const R=generateValues(base).filter(r=>r>=target&&r<=target*20);let results=[];if(count===2){for(let i=0;i<R.length;i++)for(let j=i;j<R.length;j++){let total=(R[i]*R[j])/(R[i]+R[j]),error=(total-target)/target*100;results.push({values:[R[i],R[j]],total,error})}}else{for(let i=0;i<R.length;i++)for(let j=i;j<R.length;j++)for(let k=j;k<R.length;k++){let total=1/(1/R[i]+1/R[j]+1/R[k]),error=(total-target)/target*100;results.push({values:[R[i],R[j],R[k]],total,error})}}return results.sort((a,b)=>Math.abs(a.error)-Math.abs(b.error)).slice(0,20)}
+        function setSeries(s){series=s;document.getElementById('e12').classList.toggle('active',s==='E12');document.getElementById('e24').classList.toggle('active',s==='E24')}
+        function setMode(m){mode=m;document.getElementById('btn2').classList.toggle('active',m===2);document.getElementById('btn3').classList.toggle('active',m===3)}
+        function calculate(){let input=document.getElementById('target').value.toLowerCase().replace(',','.').trim(),mult=1;if(input.endsWith('k')){mult=1e3;input=input.slice(0,-1)}else if(input.endsWith('m')){mult=1e6;input=input.slice(0,-1)}let target=parseFloat(input)*mult;if(isNaN(target)){document.getElementById('results').innerHTML='<div class="placeholder" style="color:#d32f2f">❌ Введите корректное число</div>';return}let base=series==='E12'?E12:E24,results=find(target,mode,base);if(!results.length){document.getElementById('results').innerHTML='<div class="placeholder">Нет подходящих комбинаций</div>';return}let html=results.map(r=>{let vals=r.values.map(format).join(' || '),err=r.error,errClass=Math.abs(err)<.5?'err-low':Math.abs(err)<2?'err-mid':'err-high',sign=err>=0?'+':'';return`<div class="result"><div class="values">${vals}</div><div class="total">= ${format(r.total)}Ω | <span class="${errClass}">${sign}${err.toFixed(3)}%</span></div></div>`}).join('');document.getElementById('results').innerHTML=html}
+        document.getElementById('target').addEventListener('keypress',e=>{if(e.key==='Enter')calculate()});
+    </script>
+</body>
+</html>
