@@ -31,11 +31,17 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (COMPATIBLE VERSIONS)
         run: |
           pip install --upgrade pip
-          pip install cython buildozer "kivy==2.3.0" "kivymd==1.2.0"
-          # ✅ Используем master ветку (работает)
+          # ✅ Совместимые версии для Python 3.11
+          pip install "cython<3.1.0"  # Cython 3.0.x работает стабильнее
+          pip install buildozer
+          pip install "kivy==2.3.0"
+          pip install "kivymd==1.2.0"
+          # ✅ pyjnius из master (исправлена ошибка с 'long')
+          pip install "git+https://github.com/kivy/pyjnius.git@master"
+          # ✅ python-for-android из master
           pip install "git+https://github.com/kivy/python-for-android.git@master"
 
       - name: Build APK
