@@ -1,60 +1,39 @@
 name: Build APK
-
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    
+  build-android:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with: { python-version: '3.10' }
+      - name: Cache Buildozer global deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer/android/platform/android-sdk
+            ~/.buildozer/android/platform/android-ndk
+            ~/.buildozer/android/packages
+          key: buildozer-deps-${{ hashFiles('buildozer.spec') }}
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y openjdk-11-jdk zip unzip autoconf automake libtool pkg-config
-
-      - name: Increase swap space
-        run: |
-          sudo swapoff -a || true
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          
-          # ✅ Cython 0.29.x (максимально совместимая)
-          pip install "cython==0.29.37"
-          
-          # ✅ buildozer 1.4.0
-          pip install "buildozer==1.4.0"
-          
-          # ✅ Kivy 2.2.0
-          pip install "kivy==2.2.0"
-          
-          # ✅ KivyMD 1.1.1
-          pip install "kivymd==1.1.1"
-          
-          # ✅ python-for-android: ПРАВИЛЬНЫЙ формат тега (без "v"!)
-          pip install "git+https://github.com/kivy/python-for-android.git@2023.10.28"
-
-      - name: Build APK
-        run: |
-          cd $GITHUB_WORKSPACE
-          buildozer -v android debug
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1  # ✅ Патченный образ
+        id: buildozer
+        with:
+          workdir: .
+          buildozer_version: stable
+          command: buildozer android release
+        env:
+          APP_ANDROID_ARCH: arm64-v8a
+          APP_ANDROID_API: 33
+          APP_ANDROID_NDK: 25b
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with: { name: resistorcalc-apk, path: bin/*.apk }
+        with:
+          name: resistorcalc-apk
+          path: ${{ steps.buildozer.outputs.filename }}
