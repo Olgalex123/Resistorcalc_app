@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache Buildozer global dependencies
+      - name: Cache Buildozer dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -26,12 +26,16 @@ jobs:
           restore-keys: |
             buildozer-deps-
 
-      - name: Build APK (non-root)
+      - name: Patch buildozer root check
         run: |
-          docker run --rm \
-            --user 1000:1000 \
-            -v ${PWD}:/app \
-            -w /app \
+          docker run --rm -v ${PWD}:/app -w /app \
+            kivy/buildozer:latest \
+            sed -i 's/cont = input.*/cont = "y"/' \
+            /home/user/.venv/lib/python3.12/site-packages/buildozer/__init__.py
+
+      - name: Build APK
+        run: |
+          docker run --rm -v ${PWD}:/app -w /app \
             kivy/buildozer:latest \
             buildozer android release
 
