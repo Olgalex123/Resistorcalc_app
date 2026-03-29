@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache Buildozer global deps
+      - name: Cache Buildozer dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -20,20 +20,14 @@ jobs:
             ~/.buildozer/android/packages
           key: buildozer-deps-${{ hashFiles('buildozer.spec') }}
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1  # ✅ Патченный образ
-        id: buildozer
-        with:
-          workdir: .
-          buildozer_version: stable
-          command: buildozer android release
-        env:
-          APP_ANDROID_ARCH: arm64-v8a
-          APP_ANDROID_API: 33
-          APP_ANDROID_NDK: 25b
+      - name: Build APK with Docker
+        run: |
+          docker run --rm -v ${PWD}:/app -w /app \
+            kivy/buildozer:latest \
+            buildozer android release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: resistorcalc-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
