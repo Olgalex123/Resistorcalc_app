@@ -1,25 +1,23 @@
+
 [app]
-title = Подбор Резисторов
+title = ResistorCalc
 package.name = resistorcalc
 package.domain = org.olgalex
 
+# === КРИТИЧНО: версии ===
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-source.exclude_exts = spec
+version = 0.1
+requirements = python3==3.10.12,kivy==2.3.0,kivymd==1.2.0,cython==0.29.37,pyjnius==1.6.1,android
 
-version = 1.0.0
-
-requirements = python3==3.10.13,kivy==2.2.0,kivymd==1.1.1
-
-orientation = portrait
-fullscreen = 0
-
+# === Android ===
 android.api = 33
 android.minapi = 21
 android.arch = arm64-v8a
+android.ndk = 25b
 android.accept_sdk_license = True
-android.permissions = INTERNET
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
+# === Оптимизация сборки ===
+android.add_aars = 
+android.gradle_dependencies = 
+p4a.local_recipes = 
