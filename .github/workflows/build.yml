@@ -1,0 +1,47 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:  # Позволяет запускать вручную
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y openjdk-11-jdk zip unzip
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install cython buildozer "kivy==2.3.0" "kivymd==1.2.0"
+          pip install "https://github.com/kivy/python-for-android/archive/master.zip"
+
+      - name: Initialize Buildozer
+        run: |
+          buildozer init
+          sed -i 's/title = My Application/title = Подбор Резисторов/' buildozer.spec
+          sed -i 's/package.name = myapp/package.name = resistorcalc/' buildozer.spec
+          sed -i 's/requirements = python3,kivy/requirements = python3,kivy==2.3.0,kivymd==1.2.0/' buildozer.spec
+          sed -i 's/orientation = all/orientation = portrait/' buildozer.spec
+
+      - name: Build APK
+        run: buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: resistorcalc-apk
+          path: bin/*.apk
