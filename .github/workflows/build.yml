@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04  # ← Более стабильная среда
+    runs-on: ubuntu-22.04
     
     steps:
       - name: Checkout code
@@ -35,13 +35,8 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install cython buildozer "kivy==2.3.0" "kivymd==1.2.0"
-          # Использовать конкретный коммит p4a с исправлениями
-          pip install "git+https://github.com/kivy/python-for-android.git@2024.6.1"
-
-      - name: Patch libffi recipe (skip autogen.sh)
-        run: |
-          # Найти и заменить вызов autogen.sh на configure (если есть pre-generated)
-          find ~/.buildozer -name "__init__.py" -path "*/recipes/libffi/*" -exec sed -i "s/sh.Command('.\/autogen.sh')/sh.Command('.\/configure')/g" {} \; || true
+          # ✅ Используем master ветку (работает)
+          pip install "git+https://github.com/kivy/python-for-android.git@master"
 
       - name: Build APK
         run: |
