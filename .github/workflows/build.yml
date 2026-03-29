@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # ← Более стабильная среда
     
     steps:
       - name: Checkout code
@@ -15,18 +15,16 @@ jobs:
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+        with: { python-version: '3.11' }
 
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y openjdk-11-jdk zip unzip
-          sudo apt install -y autoconf automake libtool ninja-build
+          sudo apt install -y openjdk-11-jdk zip unzip autoconf automake libtool pkg-config
 
-      - name: Increase swap space (fix OOM)
+      - name: Increase swap space
         run: |
-          sudo swapoff -a
+          sudo swapoff -a || true
           sudo fallocate -l 4G /swapfile
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
@@ -37,19 +35,19 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install cython buildozer "kivy==2.3.0" "kivymd==1.2.0"
-          pip install --upgrade "https://github.com/kivy/python-for-android/archive/master.zip"
+          # Использовать конкретный коммит p4a с исправлениями
+          pip install "git+https://github.com/kivy/python-for-android.git@2024.6.1"
 
-      - name: Fix libffi build (patch autoconf macros)
+      - name: Patch libffi recipe (skip autogen.sh)
         run: |
-          # Скопировать правильные макросы libtool
-          mkdir -p /usr/share/aclocal
-          wget -q https://raw.githubusercontent.com/libffi/libffi/master/libtool.m4 -O /usr/share/aclocal/libtool.m4 || true
+          # Найти и заменить вызов autogen.sh на configure (если есть pre-generated)
+          find ~/.buildozer -name "__init__.py" -path "*/recipes/libffi/*" -exec sed -i "s/sh.Command('.\/autogen.sh')/sh.Command('.\/configure')/g" {} \; || true
 
       - name: Build APK
-        run: buildozer -v android debug
+        run: |
+          cd $GITHUB_WORKSPACE
+          buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with:
-          name: resistorcalc-apk
-          path: bin/*.apk
+        with: { name: resistorcalc-apk, path: bin/*.apk }
