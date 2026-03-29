@@ -31,15 +31,24 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (TESTED COMBO)
         run: |
           pip install --upgrade pip
-          pip install "cython>=3.0.0,<3.1.0"
-          pip install buildozer
-          pip install "kivy==2.3.0"
-          pip install "kivymd==1.2.0"
-          # ✅ НЕ устанавливаем pyjnius вручную - p4a установит сам!
-          pip install "git+https://github.com/kivy/python-for-android.git@master"
+          
+          # ✅ Cython 0.29.x (максимально совместимая версия)
+          pip install "cython==0.29.37"
+          
+          # ✅ buildozer 1.4.0 (стабильная версия)
+          pip install "buildozer==1.4.0"
+          
+          # ✅ Kivy 2.2.0 (более стабильная чем 2.3.0)
+          pip install "kivy==2.2.0"
+          
+          # ✅ KivyMD 1.1.1 (стабильная версия)
+          pip install "kivymd==1.1.1"
+          
+          # ✅ python-for-android 2023.10.28 (стабильный тег)
+          pip install "git+https://github.com/kivy/python-for-android.git@v2023.10.28"
 
       - name: Build APK
         run: |
