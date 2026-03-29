@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10  # ✅ Python 3.10 стабильнее для Buildozer
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with: { python-version: '3.10' }
 
@@ -34,21 +34,11 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          
-          # ✅ Cython 3.0.x (стабильная версия)
           pip install "cython>=3.0.0,<3.1.0"
-          
-          # ✅ buildozer
           pip install buildozer
-          
-          # ✅ Kivy и KivyMD
           pip install "kivy==2.3.0"
           pip install "kivymd==1.2.0"
-          
-          # ✅ pyjnius: последняя версия с PyPI (совместима с Python 3.10)
-          pip install pyjnius
-          
-          # ✅ python-for-android: master ветка
+          # ✅ НЕ устанавливаем pyjnius вручную - p4a установит сам!
           pip install "git+https://github.com/kivy/python-for-android.git@master"
 
       - name: Build APK
