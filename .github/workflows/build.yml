@@ -27,19 +27,14 @@ jobs:
             buildozer-deps-
 
       - name: Build APK
-        run: |
-          docker run --rm -v ${PWD}:/app -w /app \
-            kivy/buildozer:latest \
-            sh -c "
-              apt-get update -qq && apt-get install -y -qq expect &&
-              expect -c '
-                spawn buildozer android release
-                expect {
-                  \"Are you sure\" { send \"y\r\"; exp_continue }
-                  eof
-                }
-              '
-            "
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 90
+          max_attempts: 1
+          command: |
+            docker run --rm -v ${{ github.workspace }}:/app -w /app \
+              kivy/buildozer:latest \
+              /bin/bash -c "echo 'y' | buildozer android release"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
