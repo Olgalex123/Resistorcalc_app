@@ -9,7 +9,69 @@ jobs:
   build-android:
     name: Build APK
     runs-on: ubuntu-latest
+    timeout-minutes: 90name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build APK
+    runs-on: ubuntu-latest
     timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Buildozer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer/android/platform/android-sdk
+            ~/.buildozer/android/platform/android-ndk
+            ~/.buildozer/android/packages
+          key: buildozer-deps-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-deps-
+
+      - name: Build APK
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app \
+            kivy/buildozer:latest \
+            /bin/bash -c '
+              # Найти файл __init__.py через find
+              BUILD_FILE=$(find /home/user/.venv -name "__init__.py" -path "*/buildozer/__init__.py" 2>/dev/null | head -1)
+              if [ -z "$BUILD_FILE" ]; then
+                echo "ERROR: buildozer __init__.py not found!"
+                exit 1
+              fi
+              echo "Patching: $BUILD_FILE"
+              
+              # Патчим через Python (надёжнее sed)
+              python3 -c "
+import re
+with open(\"$BUILD_FILE\", \"r\") as f:
+    content = f.read()
+# Заменяем строку input() на фиксированное "y"
+content = re.sub(r"cont = input\([^)]+\)", "cont = \"y\"", content)
+with open(\"$BUILD_FILE\", \"w\") as f:
+    f.write(content)
+print(\"Patched successfully\")
+"
+              
+              # Запускаем сборку
+              buildozer android release
+            '
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: resistorcalc-apk
+          path: bin/*.apk
+          if-no-files-found: error
 
     steps:
       - name: Checkout repository
