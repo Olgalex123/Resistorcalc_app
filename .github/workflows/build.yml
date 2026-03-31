@@ -15,12 +15,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Clean Build Cache (критично при смене версии!)
+      - name: Clean Build Cache (critical when changing Python version)
         run: |
           rm -rf .buildozer/android/platform/build-*
           rm -rf .buildozer/android/packages
+          rm -rf bin/
 
-      - name: Cache Buildozer dependencies
+      - name: Cache Buildozer global dependencies
         uses: actions/cache@v4
         with:
           path: |
@@ -37,18 +38,24 @@ jobs:
           image: kivy/buildozer:latest
           options: -v ${{ github.workspace }}:/app -w /app -i
           run: |
-            echo "=== PATCHING ROOT CHECK ==="
+            echo "=== [1/3] PATCHING ROOT CHECK ==="
             BUILD_FILE=$(find /home/user/.venv -name "__init__.py" -path "*/buildozer/__init__.py" 2>/dev/null | head -1)
             if [ -n "$BUILD_FILE" ]; then
               sed -i 's/cont = input.*/cont = "y"/' "$BUILD_FILE"
-              echo "Patched: $BUILD_FILE"
+              echo "✓ Patched: $BUILD_FILE"
+              grep -n 'cont = "y"' "$BUILD_FILE" || true
+            else
+              echo "✗ ERROR: buildozer __init__.py not found!"
+              exit 1
             fi
-            
-            echo "=== CREATING PYTHON3.11 SYMLINK ==="
+
+            echo ""
+            echo "=== [2/3] CREATING PYTHON3.11 SYMLINK ==="
             ln -sf $(which python3) /usr/bin/python3.11
-            ls -la /usr/bin/python3.11 || true
-            
-            echo "=== STARTING BUILD ==="
+            ls -la /usr/bin/python3.11 && echo "✓ Symlink created" || echo "✗ Symlink failed"
+
+            echo ""
+            echo "=== [3/3] STARTING BUILD ==="
             buildozer -y android release
 
       - name: Upload APK
