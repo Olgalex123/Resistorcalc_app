@@ -27,14 +27,13 @@ jobs:
             buildozer-deps-
 
       - name: Build APK
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 90
-          max_attempts: 1
-          command: |
-            docker run --rm -v ${{ github.workspace }}:/app -w /app \
-              kivy/buildozer:latest \
-              /bin/bash -c "echo 'y' | buildozer android release"
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/app -w /app \
+            kivy/buildozer:latest \
+            /bin/bash -c "
+              sed -i 's/cont = input.*/cont = \"y\"/' /home/user/.venv/lib/python3.12/site-packages/buildozer/__init__.py &&
+              buildozer android release
+            "
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
