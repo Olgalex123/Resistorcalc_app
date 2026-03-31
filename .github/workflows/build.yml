@@ -26,18 +26,11 @@ jobs:
           restore-keys: |
             buildozer-deps-
 
-      - name: Patch buildozer root check
+      - name: Build APK (patch + build in one container)
         run: |
           docker run --rm -v ${PWD}:/app -w /app \
             kivy/buildozer:latest \
-            sed -i 's/cont = input.*/cont = "y"/' \
-            /home/user/.venv/lib/python3.12/site-packages/buildozer/__init__.py
-
-      - name: Build APK
-        run: |
-          docker run --rm -v ${PWD}:/app -w /app \
-            kivy/buildozer:latest \
-            buildozer android release
+            sh -c "sed -i 's/cont = input.*/cont = \"y\"/' /home/user/.venv/lib/python3.12/site-packages/buildozer/__init__.py && buildozer android release"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
