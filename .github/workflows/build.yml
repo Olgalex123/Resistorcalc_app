@@ -26,19 +26,23 @@ jobs:
           restore-keys: |
             buildozer-deps-
 
-      - name: Build APK
+      - name: Build APK (with debug + stdin)
         run: |
-          docker run --rm -v ${{ github.workspace }}:/app -w /app \
+          printf 'y\n' | docker run --rm -i \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
             kivy/buildozer:latest \
-            /bin/bash -c '
-              BUILD_FILE=$(find /home/user/.venv -name "__init__.py" -path "*/buildozer/__init__.py" 2>/dev/null | head -1)
-              if [ -z "$BUILD_FILE" ]; then
-                echo "ERROR: buildozer __init__.py not found!"
-                exit 1
-              fi
-              echo "Patching: $BUILD_FILE"
-              sed -i "s/cont = input.*/cont = \"y\"/" "$BUILD_FILE"
-              echo "Patched. Starting build..."
+            bash -c '
+              echo "=== DEBUG: Finding buildozer file ==="
+              find /home/user/.venv -name "__init__.py" -path "*/buildozer/__init__.py" 2>/dev/null
+              echo "=== DEBUG: Patching ==="
+              for f in $(find /home/user/.venv -name "__init__.py" -path "*/buildozer/__init__.py" 2>/dev/null); do
+                echo "Patching: $f"
+                sed -i '"'"'s/cont = input.*/cont = "y"/'"'"' "$f"
+                echo "After patch:"
+                grep -n "cont = " "$f" || echo "NOT FOUND"
+              done
+              echo "=== DEBUG: Starting buildozer ==="
               buildozer android release
             '
 
