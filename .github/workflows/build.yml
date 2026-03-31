@@ -15,6 +15,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Clean Build Cache (критично при смене версии!)
+        run: |
+          rm -rf .buildozer/android/platform/build-*
+          rm -rf .buildozer/android/packages
+
       - name: Cache Buildozer dependencies
         uses: actions/cache@v4
         with:
@@ -37,12 +42,11 @@ jobs:
             if [ -n "$BUILD_FILE" ]; then
               sed -i 's/cont = input.*/cont = "y"/' "$BUILD_FILE"
               echo "Patched: $BUILD_FILE"
-              grep -n "cont = " "$BUILD_FILE" || true
             fi
             
-            echo "=== CREATING PYTHON3.10 SYMLINK ==="
-            ln -sf $(which python3) /usr/bin/python3.10
-            ls -la /usr/bin/python3.10 || true
+            echo "=== CREATING PYTHON3.11 SYMLINK ==="
+            ln -sf $(which python3) /usr/bin/python3.11
+            ls -la /usr/bin/python3.11 || true
             
             echo "=== STARTING BUILD ==="
             buildozer -y android release
