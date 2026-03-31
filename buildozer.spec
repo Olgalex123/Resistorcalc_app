@@ -5,8 +5,8 @@ package.domain = org.olgalex
 
 version = 0.1
 
-# === Изменено: Python 3.11 вместо 3.10.12 ===
-requirements = python3==3.11,kivy==2.3.0,kivymd==1.2.0,cython==0.29.37,pyjnius==1.6.1,android
+# === Исправлено: полная версия Python ===
+requirements = python3==3.11.7,kivy==2.3.0,kivymd==1.2.0,cython==0.29.37,pyjnius==1.6.1,android
 
 android.api = 33
 android.minapi = 21
