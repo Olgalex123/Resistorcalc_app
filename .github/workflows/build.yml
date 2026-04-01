@@ -61,6 +61,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: resistorcalc-apk
-          path: bin/*.apk
+          name: resistorcalc-aab
+          path: bin/*.aab
           if-no-files-found: error
