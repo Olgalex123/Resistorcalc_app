@@ -8,7 +8,6 @@ from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.label import MDLabel
 from kivy.metrics import dp
 from kivy.clock import Clock
-from kivy.core.window import Window
 import itertools
 
 # === Ряды сопротивлений ===
@@ -53,7 +52,8 @@ def find_combinations(target_r, count, series='E24'):
             error = (r_total - target_r) / target_r * 100
             results.append({'values': (r1, r1), 'total': r_total, 'error': error})
     elif count == 3:
-        for r1, r2, r3 in itertools.combinations(search_pool, 3):
+        limited_pool = search_pool[:30]
+        for r1, r2, r3 in itertools.combinations(limited_pool, 3):
             r_total = 1 / (1/r1 + 1/r2 + 1/r3)
             error = (r_total - target_r) / target_r * 100
             results.append({'values': (r1, r2, r3), 'total': r_total, 'error': error})
@@ -263,7 +263,6 @@ class ResistorApp(MDApp):
     def build(self):
         self.theme_cls.primary_palette = "Blue"
         self.theme_cls.theme_style = "Light"
-        Window.size = (400, 700)  # Чуть больше для нового интерфейса
         return MainScreen()
 
 if __name__ == '__main__':
